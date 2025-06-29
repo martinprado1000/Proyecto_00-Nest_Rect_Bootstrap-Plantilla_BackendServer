@@ -75,12 +75,12 @@ import { mailerConfigFactory } from './appConfig/mailer.config';
 
 export class AppModule implements NestModule {
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(private readonly configService: ConfigService) { 
     const appPort = this.configService.get<string>('APP_PORT');
-    console.log('Puerto de la app desde el .env:', appPort);
   }
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(CorrelationIdMiddleware).forRoutes('*'); 
+    //consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*path');  
   }
 }

@@ -69,7 +69,7 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'Not Found' })
   @ApiResponse({ status: 403, description: 'Forbidden, token related' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @Auth(ValidRoles.SUPERADMIN,ValidRoles.ADMIN)
+  @Auth()  // Si asigno estos valores un usuario estandar no podria editar su perfil.
   async update(
     @Param('id', idMongoPipe) id: string,
     @Body() updateUserDto: UpdateUserDto,

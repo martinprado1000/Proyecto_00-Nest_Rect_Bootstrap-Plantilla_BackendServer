@@ -8,7 +8,8 @@ import {
   IsEnum,
   Matches,
   IsBoolean,
-  IsMongoId
+  IsMongoId,
+  MaxLength
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { Types } from 'mongoose';
@@ -33,12 +34,14 @@ export class CreateUserDto {
     description: 'User name',
     type: 'string',
     minLength: 2,
+    maxLength: 50,
     nullable: false,
     example: 'Richard'
   })
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
+  @MaxLength(50)
   @Matches(/^[^\s]+$/, { message: 'El nombre no puede contener espacioss' })
   @Transform(({ value }) => capitalize(value))
   name: string;
@@ -47,12 +50,14 @@ export class CreateUserDto {
     description: 'User lastname',
     type: 'string',
     minLength: 2,
+    maxLength: 50,
     nullable: false,
     example: 'Kendy'
   })
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
+  @MaxLength(50)
   @Matches(/^[^\s]+$/, { message: 'El apellido no puede contener espacios' })
   @Transform(({ value }) => capitalize(value))
   lastname: string;
@@ -61,10 +66,12 @@ export class CreateUserDto {
     description: 'User email',
     type: 'string',
     nullable: false,
+    maxLength: 100,
     example: 'richard@gmail.com'
   })
   @IsEmail()
   @IsNotEmpty()
+  @MaxLength(100)
   @Transform(({ value }) => value.toLowerCase().trim())
   email: string;
 
@@ -77,6 +84,7 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty({ message: 'La contraseña es obligatoria' })
   @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
+  @MaxLength(30, { message: 'La contraseña debe tener menos de 30 caracteres' })
   @Matches(/^\S*$/, { message: 'La contraseña no debe contener espacios' })
   @Matches(/(?:(?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
     message:
@@ -93,6 +101,7 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty({ message: 'La contraseña es obligatoria' })
   @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
+  @MaxLength(30, { message: 'La contraseña debe tener menos de 30 caracteres' })
   @Matches(/^\S*$/, {
     message: 'La confirmación de contraseña no debe contener espacios',
   })

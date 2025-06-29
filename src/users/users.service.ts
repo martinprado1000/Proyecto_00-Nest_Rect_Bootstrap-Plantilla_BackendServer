@@ -157,8 +157,7 @@ export class UsersService {
     activeUser: CreateUserDto | null,
   ): Promise<ResponseUserDto> {
     // Si activeUser no existe significa que viene de recoveryPassword
-    if (activeUser)
-      await this.canEdit(id, activeUser, updateUserDto.roles);
+    if (activeUser) await this.canEdit(id, activeUser, updateUserDto.roles);
 
     let { password, confirmPassword } = updateUserDto;
 
@@ -190,12 +189,13 @@ export class UsersService {
       },
     );
 
-    if (activeUser) // Si NO existe activeUser loggeo la acción en recovery password
-    this.logger.http(
-      UsersService.name,
-      `Usuario ${activeUser?._id} editó al usuario ${id}`,
-      `PATCH/${id}`,
-    );
+    if (activeUser)
+      // Si NO existe activeUser loggeo la acción en recovery password
+      this.logger.http(
+        UsersService.name,
+        `Usuario ${activeUser?._id} editó al usuario ${id}`,
+        `PATCH/${id}`,
+      );
 
     return updatedUserPlain;
   }
@@ -263,7 +263,9 @@ export class UsersService {
         `PATCH/recoveryPassword`,
       );
 
-      return { message: `Usuario: ${emailUserDto.email} restableció su contraseña`};
+      return {
+        message: `Usuario: ${emailUserDto.email} restableció su contraseña`,
+      };
     } catch (error) {
       console.log(error);
       this.handleDBErrors(error);
@@ -312,9 +314,42 @@ export class UsersService {
     userActive: CreateUserDto | null,
     roleToEdit: Role | Role[] | undefined = Role.USER, // Si no viene ningun rol le asigno USER para poder eliminar.
   ): Promise<void | string> {
+    // console.log(userActive?.roles);
+    // console.log(roleToEdit);
+
+    let equalRoles = false;
+    if ( // Compara roleToEdit y userActive?.roles
+      (typeof roleToEdit === 'string' &&
+        userActive?.roles?.length === 1 &&
+        userActive.roles[0] === roleToEdit) ||
+      (Array.isArray(roleToEdit) &&
+        Array.isArray(userActive?.roles) &&
+        roleToEdit.length === userActive.roles.length &&
+        roleToEdit.every((r) => userActive?.roles?.includes(r)))
+    ) {
+      equalRoles = true
+    }
+
     const userToEdit = await this.findOneResponse(id);
 
-    if (userActive?.roles?.includes(Role.SUPERADMIN)) return;
+    // if (userActive?._id?.toString() === id) {
+    //   console.log('id iguales');
+    // }
+    // if (equalRoles) {
+    //   console.log('rol iguales');
+    // }
+
+    if (userActive?.roles?.includes(Role.SUPERADMIN)) {
+      return; // Si es superadmin puede editar cualquier usuario.
+    }
+
+    if (
+      userActive?.roles?.includes(Role.ADMIN) &&
+      userActive?._id?.toString() === id &&
+      equalRoles
+    ) {
+      return; // Si es admin se puede editar el mismo pero no modificar el rol
+    }
 
     const hasUserAndOperator =
       roleToEdit?.includes(Role.USER) || roleToEdit?.includes(Role.OPERATOR);
@@ -322,14 +357,23 @@ export class UsersService {
     if (
       (hasUserAndOperator &&
         userActive?.roles?.includes(Role.ADMIN) &&
-        userToEdit?.roles?.includes(Role.USER)) ||
-      (userActive?.roles?.includes(Role.ADMIN) &&
-        userToEdit?.roles?.includes(Role.OPERATOR))
-    )
+        userToEdit?.roles?.includes(Role.OPERATOR)) || // Si es admin puede editar usuarios operadores si va a ser reemplazado por user u operador
+      (hasUserAndOperator &&
+        userActive?.roles?.includes(Role.ADMIN) &&
+        userToEdit?.roles?.includes(Role.USER)) // Si es admin puede editar usuarios user si va a ser reemplazado por user u operador
+    ) {
       return;
+    }
+
+    if (
+      userActive?._id?.toString() === id &&
+      equalRoles
+    ) {
+      return;
+    } // El propio usuario se puede editar el mismo pero no modificar el rol
 
     throw new BadRequestException(
-      `Operación no permitida para usuario ${Role.ADMIN}`,
+      `Operación no permitida para usuario tipo: ${userActive?.roles}`,
     );
   }
 
@@ -371,6 +415,5 @@ const generateRandomString = (length = 8) => {
     const randomIndex = Math.floor(Math.random() * characters.length);
     result += characters[randomIndex];
   }
-
   return result;
 };
