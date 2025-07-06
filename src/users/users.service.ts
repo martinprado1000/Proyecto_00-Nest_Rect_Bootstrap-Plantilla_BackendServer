@@ -327,17 +327,10 @@ export class UsersService {
         roleToEdit.length === userActive.roles.length &&
         roleToEdit.every((r) => userActive?.roles?.includes(r)))
     ) {
-      equalRoles = true
+      equalRoles = true;
     }
 
     const userToEdit = await this.findOneResponse(id);
-
-    // if (userActive?._id?.toString() === id) {
-    //   console.log('id iguales');
-    // }
-    // if (equalRoles) {
-    //   console.log('rol iguales');
-    // }
 
     if (userActive?.roles?.includes(Role.SUPERADMIN)) {
       return; // Si es superadmin puede editar cualquier usuario.
@@ -365,10 +358,7 @@ export class UsersService {
       return;
     }
 
-    if (
-      userActive?._id?.toString() === id &&
-      equalRoles
-    ) {
+    if (userActive?._id?.toString() === id && equalRoles) {
       return;
     } // El propio usuario se puede editar el mismo pero no modificar el rol
 
